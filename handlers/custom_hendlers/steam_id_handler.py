@@ -32,10 +32,17 @@ def search_steam_id(message: Message, bot: TeleBot) -> None:
     """
     profile_url = message.text.strip()
     vanity_url = extract_vanity_url(profile_url)
-
+    print(vanity_url)
     if not vanity_url:
         bot.send_message(message.chat.id, 'Некорректная ссылка на профиль. Введите ссылку снова.')
         return
+    try:
+        if int(vanity_url) and len(vanity_url) == 17:
+            bot.send_message(message.chat.id, f'Steam ID для пользователя: {vanity_url}')
+            handle_steam_id(message, bot, vanity_url)
+            return
+    except ValueError:
+        print('В ссылке нет Steam ID64. Запрашиваем через Steam API')
 
     url = steam_id_url(vanity_url)
 
@@ -63,11 +70,20 @@ def extract_vanity_url(profile_url: str) -> str or None:
     :param profile_url: (str) Ссылка на профиль в Steam.
     :return: (str or None) Vanity URL профиля Steam, если он найден, иначе None.
     """
-    parts = profile_url.split('/id/')
-    if len(parts) != 2:
-        return None
-    vanity_url = parts[1].strip('/')  # Убираем возможные '/' в начале и конце
-    return vanity_url
+    if profile_url.startswith('https://steamcommunity.com/profiles/'):
+        parts = profile_url.split('/profiles/')
+        if len(parts) == 2:
+            steam_id_part = parts[1].strip('/')
+            if steam_id_part.isdigit() and len(steam_id_part) == 17:
+                return steam_id_part
+
+    elif profile_url.startswith('https://steamcommunity.com/id/'):
+        parts = profile_url.split('/id/')
+        if len(parts) == 2:
+            vanity_url = parts[1].strip('/')
+            return vanity_url
+
+    return None
 
 
 def handle_steam_id(message: Message, bot: TeleBot, steam_id: str) -> None:
