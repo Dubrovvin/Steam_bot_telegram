@@ -163,8 +163,10 @@ def asking_about_new_game(message: Message, bot: TeleBot) -> None:
     elif message.text == "Нет":
         bot.send_message(message.chat.id, 'Список игр составлен.', reply_markup=types.ReplyKeyboardRemove())
         keyboard = create_next_step_keyboard()
+        print(message)
+        print(message.text)
         bot.send_message(message.chat.id, 'Переходим к шагу выбора приоритета?', reply_markup=keyboard)
-    return
+        return
 
 def new_game(message: Message, bot: TeleBot) -> None:
     """
