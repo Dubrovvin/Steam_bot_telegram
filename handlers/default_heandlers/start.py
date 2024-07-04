@@ -6,7 +6,9 @@ from handlers.custom_hendlers.command_history_handler import record_command
 
 def bot_start(message: Message, bot):
     keyboard = create_start_keyboard()
+    record_command(message, message.text)
     try:
+
         User.get(User.telegram_username == message.from_user.username)
 
         bot.send_message(message.chat.id, f'Привет, {message.from_user.full_name}!\n'

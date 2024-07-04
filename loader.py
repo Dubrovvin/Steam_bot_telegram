@@ -11,16 +11,15 @@ def handle_history_command(message):
     command_history_handler.record_command(message, '/history')
 
 
-@bot.message_handler(commands=['help', 'Помощь'])
+@bot.message_handler(commands=['help'])
 def handle_help(message):
     help.bot_help(message, bot)
     command_history_handler.record_command(message, '/help')
 
 
-@bot.message_handler(commands=['start', 'Начать заново'])
+@bot.message_handler(commands=['start'])
 def handle_start(message):
     start.bot_start(message, bot)
-    #command_history_handler.record_command(message, '/start')
 
 
 @bot.message_handler(func=lambda message: message.text in ['Да, конечно!', 'Нет, спасибо'])
@@ -29,14 +28,9 @@ def getting_response(message):
     command_history_handler.record_command(message, message.text)
 
 
-@bot.message_handler(func=lambda message: message.text)
-def steam_id(message):
-    steam_id_handler.get_url(message, bot)
-
-
-@bot.message_handler(commands=['/preference', 'Выбирать приоритет игр'])
-def game_preference(message):
-    game_preference_handler.handle_game_preference(message, bot)
+#@bot.message_handler(func=lambda message: message.text in ['/preference'])
+#def game_preference(message):
+    #game_preference_handler.handle_game_preference(message, bot)
 
 
 @bot.message_handler(func=lambda message: True)

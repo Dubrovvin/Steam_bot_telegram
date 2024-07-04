@@ -10,20 +10,8 @@ from keyboards.buttons import create_next_step_keyboard
 from api.telegram_api import MAX_MESSAGE_LENGTH
 from handlers.custom_hendlers.game_preference_handler import handle_game_preference
 from handlers.custom_hendlers.command_history_handler import record_command
+from handlers.default_heandlers import start, help, echo
 
-
-def get_url(message: Message, bot: TeleBot) -> None:
-    """
-    Запрашивает у пользователя ссылку на его профиль в Steam.
-
-    После получения ссылки вызывает функцию search_steam_id для извлечения Steam ID.
-
-    :param message: (Message) Объект сообщения от пользователя.
-    :param bot: (TeleBot) Экземпляр бота Telegram.
-    """
-    bot.send_message(message.chat.id, 'Введите ссылку на ваш профиль в Steam')
-    bot.register_next_step_handler(message, lambda msg: search_steam_id(msg, bot))
-    record_command(message, message.text)
 
 def search_steam_id(message: Message, bot: TeleBot) -> None:
     """
@@ -32,9 +20,11 @@ def search_steam_id(message: Message, bot: TeleBot) -> None:
     :param message: (Message) Объект сообщения от пользователя с ссылкой на профиль в Steam.
     :param bot: (TeleBot) Экземпляр бота Telegram.
     """
+
     profile_url = message.text.strip()
     vanity_url = extract_vanity_url(profile_url)
     print(vanity_url)
+    record_command(message, message.text)
     if not vanity_url:
         bot.send_message(message.chat.id, 'Некорректная ссылка на профиль. Введите ссылку снова.')
         return
@@ -163,10 +153,9 @@ def asking_about_new_game(message: Message, bot: TeleBot) -> None:
     elif message.text == "Нет":
         bot.send_message(message.chat.id, 'Список игр составлен.', reply_markup=types.ReplyKeyboardRemove())
         keyboard = create_next_step_keyboard()
-        print(message)
-        print(message.text)
         bot.send_message(message.chat.id, 'Переходим к шагу выбора приоритета?', reply_markup=keyboard)
-        return
+        bot.register_next_step_handler(message, lambda msg: asking_about_next_step(msg, bot))
+
 
 def new_game(message: Message, bot: TeleBot) -> None:
     """
@@ -190,8 +179,9 @@ def new_game(message: Message, bot: TeleBot) -> None:
     keyboard = create_new_and_old_keyboard()
     bot.send_message(message.chat.id, f'Это новая игра, в которую вы хотите поиграть, или любимая игра с другой платформы?',
                      reply_markup=keyboard)
-    bot.register_next_step_handler(message, lambda msg: add_game(msg, bot, user, game_name))
     record_command(message, f'{message.text}')
+    bot.register_next_step_handler(message, lambda msg: add_game(msg, bot, user, game_name))
+
 
 def add_game(message: Message, bot: TeleBot, user: User, game_name: str) -> None:
     """
@@ -215,5 +205,14 @@ def add_game(message: Message, bot: TeleBot, user: User, game_name: str) -> None
     except Exception as exc:
         bot.send_message(message.chat.id, f'Произошла ошибка при добавлении игры: {exc}')
 
-#def asking_about_next_step(message: Message, bot: TeleBot) -> None:
-    #if message
+def asking_about_next_step(message: Message, bot: TeleBot) -> None:
+    print(message.text)
+    record_command(message, message.text)
+    if message.text == 'Выбирать приоритет игр':
+        bot.send_message(message.chat.id, 'Хорошо, приступим', reply_markup=types.ReplyKeyboardRemove())
+        handle_game_preference(message, bot)
+    elif message.text == 'Начать заново':
+        bot.send_message(message.chat.id, 'Давайте попробуем ещё раз', reply_markup=types.ReplyKeyboardRemove())
+        start.bot_start(message, bot)
+    elif message.text == 'Помощь':
+        help.bot_help(message, bot)

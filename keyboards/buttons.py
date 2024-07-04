@@ -34,3 +34,4 @@ def create_next_step_keyboard():
     keyboard.add(KeyboardButton('Начать заново'))
     keyboard.add(KeyboardButton('Помощь'))
     return keyboard
+
