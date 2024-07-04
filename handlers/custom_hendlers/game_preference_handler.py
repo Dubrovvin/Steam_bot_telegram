@@ -6,7 +6,7 @@ def handle_game_preference(message, bot):
     keyboard = create_game_preference_keyboard()
     bot.send_message(message.chat.id, 'Хочешь поиграть в свои любимые игры или попробуем что-то новое?',
                      reply_markup=keyboard)
-
+    bot.register_next_step_handler(message, handle_game_preference_response)
 
 def handle_game_preference_response(message, bot):
     if message.text == 'Предпочту любимые игры':

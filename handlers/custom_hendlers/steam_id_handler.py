@@ -6,8 +6,10 @@ from api.steam_api import steam_info_url, steam_id_url
 from database.database_connector import User, UserGame, db
 from keyboards.buttons import create_yes_and_no_keyboard
 from keyboards.buttons import create_new_and_old_keyboard
+from keyboards.buttons import create_next_step_keyboard
 from api.telegram_api import MAX_MESSAGE_LENGTH
 from handlers.custom_hendlers.game_preference_handler import handle_game_preference
+from handlers.custom_hendlers.command_history_handler import record_command
 
 
 def get_url(message: Message, bot: TeleBot) -> None:
@@ -21,7 +23,7 @@ def get_url(message: Message, bot: TeleBot) -> None:
     """
     bot.send_message(message.chat.id, 'Введите ссылку на ваш профиль в Steam')
     bot.register_next_step_handler(message, lambda msg: search_steam_id(msg, bot))
-
+    record_command(message, message.text)
 
 def search_steam_id(message: Message, bot: TeleBot) -> None:
     """
@@ -48,7 +50,7 @@ def search_steam_id(message: Message, bot: TeleBot) -> None:
 
     try:
         response = requests.get(url)
-        response.raise_for_status()  # Проверка на успешный статус ответа
+        response.raise_for_status()
         data = response.json()
 
         if data['response']['success'] == 1:
@@ -105,6 +107,8 @@ def handle_steam_id(message: Message, bot: TeleBot, steam_id: str) -> None:
             game_info = []
             total_playtime = 0
             user, created = User.get_or_create(telegram_username=message.from_user.username)
+            user.steam_id = steam_id
+            user.save()
             UserGame.delete().where(UserGame.user == user).execute()
 
             for game in games:
@@ -138,6 +142,7 @@ def handle_steam_id(message: Message, bot: TeleBot, steam_id: str) -> None:
             bot.send_message(message.chat.id, 'Хочешь добавить свой вариант c другой платформы?',
                              reply_markup=keyboard)
             bot.register_next_step_handler(message, lambda msg: asking_about_new_game(msg, bot))
+            return
         else:
             bot.send_message(message.chat.id, 'Ошибка: Не удалось получить данные с сервера Steam.')
     except Exception as exc:
@@ -151,12 +156,15 @@ def asking_about_new_game(message: Message, bot: TeleBot) -> None:
     :param message: (Message) Объект сообщения от пользователя с ответом.
     :param bot: (TeleBot) Экземпляр бота Telegram.
     """
+    record_command(message, message.text)
     if message.text == "Да":
         bot.send_message(message.chat.id, 'Введите название игры', reply_markup=types.ReplyKeyboardRemove())
         bot.register_next_step_handler(message, lambda msg: new_game(msg, bot))
     elif message.text == "Нет":
-        handle_game_preference(message, bot)
-
+        bot.send_message(message.chat.id, 'Список игр составлен.', reply_markup=types.ReplyKeyboardRemove())
+        keyboard = create_next_step_keyboard()
+        bot.send_message(message.chat.id, 'Переходим к шагу выбора приоритета?', reply_markup=keyboard)
+    return
 
 def new_game(message: Message, bot: TeleBot) -> None:
     """
@@ -172,16 +180,16 @@ def new_game(message: Message, bot: TeleBot) -> None:
 
     if existing_game:
         bot.send_message(message.chat.id, f'Игра "{game_name}" уже добавлена в ваш список.')
-        bot.send_message(message.chat.id, 'Хотите добавить другую игру?',
-                         reply_markup=create_yes_and_no_keyboard())
+        bot.send_message(message.chat.id, 'Хотите добавить другую игру?', reply_markup=create_yes_and_no_keyboard())
         bot.register_next_step_handler(message, lambda msg: asking_about_new_game(msg, bot))
+        record_command(message, f'{message.text}')
         return
 
     keyboard = create_new_and_old_keyboard()
-    bot.send_message(message.chat.id, f'Подскажи, это новая игра, в которую ты бы хотел поиграть'
-                                      f' или любимая игра с другой платформы?', reply_markup=keyboard)
-    bot.register_next_step_handler(message, lambda msg: add_game(msg, bot, user, game_name,))
-
+    bot.send_message(message.chat.id, f'Это новая игра, в которую вы хотите поиграть, или любимая игра с другой платформы?',
+                     reply_markup=keyboard)
+    bot.register_next_step_handler(message, lambda msg: add_game(msg, bot, user, game_name))
+    record_command(message, f'{message.text}')
 
 def add_game(message: Message, bot: TeleBot, user: User, game_name: str) -> None:
     """
@@ -198,10 +206,12 @@ def add_game(message: Message, bot: TeleBot, user: User, game_name: str) -> None
         elif message.text == 'Любимая':
             UserGame.create(user=user, game_name=game_name, playtime_minutes=99999999)
 
-        bot.send_message(message.chat.id, f'Игра "{game_name}" успешно добавлена!',
-                         reply_markup=types.ReplyKeyboardRemove())
-        bot.send_message(message.chat.id, 'Хотите добавить ещё игру?',
-                         reply_markup=create_yes_and_no_keyboard())
+        bot.send_message(message.chat.id, f'Игра "{game_name}" успешно добавлена!', reply_markup=types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, 'Хотите добавить ещё игру?', reply_markup=create_yes_and_no_keyboard())
+        record_command(message, message.text)
         bot.register_next_step_handler(message, lambda msg: asking_about_new_game(msg, bot))
     except Exception as exc:
         bot.send_message(message.chat.id, f'Произошла ошибка при добавлении игры: {exc}')
+
+#def asking_about_next_step(message: Message, bot: TeleBot) -> None:
+    #if message

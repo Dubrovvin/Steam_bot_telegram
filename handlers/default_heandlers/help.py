@@ -3,6 +3,7 @@ def bot_help(message, bot):
                 "Доступные команды:\n" \
                 "/start - начать взаимодействие с ботом\n" \
                 "/help - показать эту справку\n" \
-                "\n" \
+                "/history - показать историю ваших последних запросов\n"\
+                "\n"\
 
     bot.send_message(message.chat.id, help_text)

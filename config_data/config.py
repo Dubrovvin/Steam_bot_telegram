@@ -18,6 +18,5 @@ DEFAULT_COMMANDS = (
 )
 
 STEAM_API_URL = "http://api.steampowered.com"
-bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 storage = StateMemoryStorage()
 bot = telebot.TeleBot(token=TELEGRAM_BOT_TOKEN, state_storage=storage)

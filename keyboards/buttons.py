@@ -21,8 +21,16 @@ def create_yes_and_no_keyboard():
     keyboard.add(KeyboardButton('Нет'))
     return keyboard
 
+
 def create_new_and_old_keyboard():
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(KeyboardButton('Новая'))
     keyboard.add(KeyboardButton('Любимая'))
+    return keyboard
+
+def create_next_step_keyboard():
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(KeyboardButton('Выбирать приоритет игр!'))
+    keyboard.add(KeyboardButton('Начать заново'))
+    keyboard.add(KeyboardButton('Помощь'))
     return keyboard

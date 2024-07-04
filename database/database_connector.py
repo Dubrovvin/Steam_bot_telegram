@@ -1,5 +1,6 @@
 #Модуль для работы с базой данных SQLite
-from peewee import SqliteDatabase, Model, CharField, ForeignKeyField, IntegerField
+from peewee import SqliteDatabase, Model, CharField, ForeignKeyField, IntegerField, DateTimeField
+from datetime import datetime
 
 db = SqliteDatabase('users_games.db')
 
@@ -21,6 +22,18 @@ class UserGame(Model):
         database = db
 
 
+class CommandHistory(Model):
+    user = ForeignKeyField(User, backref='commands')
+    command_text = CharField()
+    timestamp = DateTimeField(default=datetime.now)
+
+    class Meta:
+        database = db
+        order_by = ('-timestamp',)
+
+#User.delete().execute()
+#UserGame.delete().execute()
+#CommandHistory.delete().execute()
 db.connect()
-db.create_tables([User, UserGame])
+db.create_tables([User, UserGame, CommandHistory])
 print("Таблицы созданы и приложение готово к работе.")
