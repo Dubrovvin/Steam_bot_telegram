@@ -17,6 +17,7 @@ class UserGame(Model):
     user = ForeignKeyField(User, backref='games')
     game_name = CharField()
     playtime_minutes = IntegerField()
+    ordering = IntegerField(default=0)
 
     class Meta:
         database = db
@@ -34,6 +35,9 @@ class CommandHistory(Model):
 #User.delete().execute()
 #UserGame.delete().execute()
 #CommandHistory.delete().execute()
+
+#db.drop_tables([User, UserGame, CommandHistory])
+
 db.connect()
 db.create_tables([User, UserGame, CommandHistory])
 print("Таблицы созданы и приложение готово к работе.")

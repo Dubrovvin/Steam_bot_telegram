@@ -28,17 +28,15 @@ def getting_response(message):
     command_history_handler.record_command(message, message.text)
 
 
-#@bot.message_handler(func=lambda message: message.text in ['/preference'])
-#def game_preference(message):
-    #game_preference_handler.handle_game_preference(message, bot)
+@bot.message_handler(commands=['/preference'])
+def game_preference(message):
+    game_preference_handler.handle_game_preference(message, bot)
 
 
 @bot.message_handler(func=lambda message: True)
 def handle_echo(message):
     echo.bot_echo(message, bot)
     command_history_handler.record_command(message, 'Unknown command')
-
-
 
 
 def load():

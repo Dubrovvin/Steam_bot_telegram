@@ -215,4 +215,5 @@ def asking_about_next_step(message: Message, bot: TeleBot) -> None:
         bot.send_message(message.chat.id, 'Давайте попробуем ещё раз', reply_markup=types.ReplyKeyboardRemove())
         start.bot_start(message, bot)
     elif message.text == 'Помощь':
+        bot.send_message(message.chat.id, 'Пожалуйста:', reply_markup=types.ReplyKeyboardRemove())
         help.bot_help(message, bot)
