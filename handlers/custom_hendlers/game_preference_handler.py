@@ -1,8 +1,8 @@
 from api.telegram_api import MAX_MESSAGE_LENGTH
 from database.database_connector import UserGame, User
 from keyboards.buttons import create_game_preference_keyboard
-
-
+from telebot import types
+from handlers.custom_hendlers.comparison_of_user_games import handle_user_selection
 def handle_game_preference(message, bot):
     keyboard = create_game_preference_keyboard()
     bot.send_message(message.chat.id, 'Хочешь поиграть в свои любимые игры или попробуем что-то новое?',
@@ -37,6 +37,6 @@ def handle_game_preference_response(message, bot):
         current_message += f'{game_name}\n'
 
     if current_message:
-        bot.send_message(message.chat.id, current_message.strip())
+        bot.send_message(message.chat.id, current_message.strip(), reply_markup=types.ReplyKeyboardRemove())
 
-    return sorted_games
+    handle_user_selection(message, bot)

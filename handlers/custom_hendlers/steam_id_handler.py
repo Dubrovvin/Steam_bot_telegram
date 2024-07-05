@@ -21,13 +21,19 @@ def search_steam_id(message: Message, bot: TeleBot) -> None:
     :param bot: (TeleBot) Экземпляр бота Telegram.
     """
 
+    def request_profile_url(msg: Message):
+        bot.send_message(msg.chat.id, 'Введите ссылку на ваш профиль в Steam')
+        bot.register_next_step_handler(message, lambda msg: search_steam_id(msg, bot))
+
     profile_url = message.text.strip()
     vanity_url = extract_vanity_url(profile_url)
-    print(vanity_url)
-    record_command(message, message.text)
+    record_command(message, profile_url)
+
     if not vanity_url:
-        bot.send_message(message.chat.id, 'Некорректная ссылка на профиль. Введите ссылку снова.')
+        bot.send_message(message.chat.id, 'Некорректная ссылка на профиль. Попробуйте еще раз.')
+        request_profile_url(message)
         return
+
     try:
         if int(vanity_url) and len(vanity_url) == 17:
             bot.send_message(message.chat.id, f'Steam ID для пользователя: {vanity_url}')
@@ -46,13 +52,15 @@ def search_steam_id(message: Message, bot: TeleBot) -> None:
         if data['response']['success'] == 1:
             steam_id = data['response']['steamid']
             bot.send_message(message.chat.id, f'Steam ID для пользователя: {steam_id}')
-
             handle_steam_id(message, bot, steam_id)
+            return
         else:
-            bot.send_message(message.chat.id, f'Не удалось найти Steam ID для пользователя "{vanity_url}".')
+            bot.send_message(message.chat.id, f'Не удалось найти Steam ID для пользователя "{vanity_url}". Попробуйте еще раз или введите /cancel, чтобы отменить.')
+            bot.register_next_step_handler(message, request_profile_url)
 
     except requests.exceptions.RequestException as e:
-        bot.send_message(message.chat.id, f'Произошла ошибка при выполнении запроса: {e}')
+        bot.send_message(message.chat.id, f'Произошла ошибка при выполнении запроса: {e}. Попробуйте еще раз или введите /cancel, чтобы отменить.')
+        bot.register_next_step_handler(message, request_profile_url)
 
 
 def extract_vanity_url(profile_url: str) -> str or None:
@@ -204,6 +212,7 @@ def add_game(message: Message, bot: TeleBot, user: User, game_name: str) -> None
         bot.register_next_step_handler(message, lambda msg: asking_about_new_game(msg, bot))
     except Exception as exc:
         bot.send_message(message.chat.id, f'Произошла ошибка при добавлении игры: {exc}')
+
 
 def asking_about_next_step(message: Message, bot: TeleBot) -> None:
     print(message.text)
