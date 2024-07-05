@@ -1,7 +1,7 @@
 import schedule
 import time
 from datetime import datetime
-from database.database_connector import User, UserGame, db
+from database.database_connector import User, UserGame, db, CommandHistory
 
 
 def clear_database():
@@ -12,6 +12,7 @@ def clear_database():
         with db.atomic():
             UserGame.delete().execute()
             User.delete().execute()
+            CommandHistory.delete().execute()
         print("База данных очищена в", datetime.now())
     except Exception as exc:
         print("Ошибка при очистке базы данных:", exc)
