@@ -1,16 +1,31 @@
 from api.telegram_api import MAX_MESSAGE_LENGTH
 from database.database_connector import UserGame, User
 from keyboards.buttons import create_game_preference_keyboard
-from telebot import types
+from telebot import TeleBot, types
 from handlers.custom_hendlers.comparison_of_user_games import handle_user_selection
-def handle_game_preference(message, bot):
+
+
+def handle_game_preference(message: types.Message, bot: TeleBot) -> None:
+    """
+    Обрабатывает сообщение о предпочтениях игр пользователя и отправляет клавиатуру с выбором.
+
+    :param message: Объект сообщения от пользователя Telegram.
+    :param bot: Экземпляр бота Telegram.
+    """
     keyboard = create_game_preference_keyboard()
     bot.send_message(message.chat.id, 'Хочешь поиграть в свои любимые игры или попробуем что-то новое?',
                      reply_markup=keyboard)
     bot.register_next_step_handler(message, lambda msg: handle_game_preference_response(msg, bot))
 
 
-def handle_game_preference_response(message, bot):
+def handle_game_preference_response(message: types.Message, bot: TeleBot) -> None:
+    """
+    Обрабатывает ответ пользователя на вопрос о предпочтениях игр.
+
+    :param message: Объект сообщения от пользователя Telegram.
+    :param bot: Экземпляр бота Telegram.
+    :return: None
+    """
     user = User.get(telegram_username=message.from_user.username)
     games = UserGame.select().where(UserGame.user == user)
 
@@ -21,7 +36,8 @@ def handle_game_preference_response(message, bot):
         bot.send_message(message.chat.id, 'Вы выбрали попробовать что-то новое.')
         sorted_games = games.order_by(UserGame.playtime_minutes.asc())
     else:
-        bot.send_message(message.chat.id, 'Я не понимаю, выберите кнопку.')
+        bot.send_message(message.chat.id, 'Не понимаю вас, выберите кнопку.')
+        handle_game_preference(message, bot)
         return
 
     for i, game in enumerate(sorted_games, start=1):

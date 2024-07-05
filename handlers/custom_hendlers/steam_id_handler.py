@@ -48,7 +48,7 @@ def search_steam_id(message: Message, bot: TeleBot) -> None:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-
+        print(data)
         if data['response']['success'] == 1:
             steam_id = data['response']['steamid']
             bot.send_message(message.chat.id, f'Steam ID для пользователя: {steam_id}')
@@ -97,8 +97,12 @@ def handle_steam_id(message: Message, bot: TeleBot, steam_id: str) -> None:
     print(f"Получен запрос на обработку Steam ID: {steam_id}")
     try:
         bot.send_message(message.chat.id, 'Подождите немного, загружаем вашу библиотеку...')
-        response = requests.get(steam_info_url(steam_id))
+        info_url = steam_info_url(steam_id)
+        print("!", info_url)
+        response = requests.get(info_url)
+        print(response)
         data = response.json()
+        print(data)
 
         if response.status_code == 200:
             games = data['response']['games']
@@ -215,6 +219,12 @@ def add_game(message: Message, bot: TeleBot, user: User, game_name: str) -> None
 
 
 def asking_about_next_step(message: Message, bot: TeleBot) -> None:
+    """
+    Ожидает ответ пользователя на вопрос о следующем шаге в работе бота.
+
+    :param message: Объект сообщения от пользователя с ответом.
+    :param bot: Экземпляр бота Telegram.
+    """
     print(message.text)
     record_command(message, message.text)
     if message.text == 'Выбирать приоритет игр':

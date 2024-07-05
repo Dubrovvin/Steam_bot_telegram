@@ -1,15 +1,25 @@
-from database.database_connector import User, UserGame, CommandHistory
-from peewee import fn
-from datetime import datetime, timedelta
-from api.telegram_api import MAX_MESSAGE_LENGTH
-from peewee import JOIN
+from telebot.types import Message
+from telebot import TeleBot
+from database.database_connector import User, UserGame
+from peewee import fn, JOIN
 
-def handle_user_selection(message, bot):
+
+def handle_user_selection(message: Message, bot: TeleBot) -> None:
+    """
+    Обрабатывает выбор пользователей, выводя список игр, которые есть у всех активных пользователей.
+
+    Функция проверяет, какие игры присутствуют у всех зарегистрированных пользователей
+    и выводит их список в порядке возрастания среднего значения позиции (ordering).
+
+    :param message: (Message) Объект сообщения от пользователя.
+    :param bot: (TeleBot) Экземпляр бота Telegram.
+    """
+
     # Определяем время неактивности (6 часов)
     all_games = UserGame.select(UserGame.game_name).distinct()
 
-    # Получаем список всех пользователей
-    all_users = User.select(User.id)
+    # Получаем список всех пользователей, у которых есть telegram_username
+    all_users = User.select().where(User.telegram_username.is_null(False))
 
     # Список для хранения средних значений ordering и названий игр
     average_orderings = []
@@ -39,7 +49,10 @@ def handle_user_selection(message, bot):
     # Сортируем по возрастанию среднего значения ordering
     average_orderings_sorted = sorted(average_orderings, key=lambda x: x[1])
 
-    bot.send_message(message.chat.id, f'Актуальный список игр для активных участвников ():')
+    # Формируем строку для списка пользователей
+    all_users_str = ', '.join([user.telegram_username for user in all_users])
+
+    bot.send_message(message.chat.id, f'Актуальный список игр для активных участников ({all_users_str}):')
 
     sequence_number = 0
     for game_name, avg_ordering in average_orderings_sorted:

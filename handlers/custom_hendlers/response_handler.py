@@ -3,6 +3,8 @@ from telebot import TeleBot
 from telebot import types
 from handlers.custom_hendlers.steam_id_handler import search_steam_id
 from handlers.custom_hendlers.command_history_handler import record_command
+
+
 def response_processing(message: Message, bot: TeleBot) -> None:
     """
     Функция для обработки ответов пользователя и отправки соответствующих сообщений или изображений.
