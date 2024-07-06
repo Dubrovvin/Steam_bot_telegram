@@ -98,11 +98,8 @@ def handle_steam_id(message: Message, bot: TeleBot, steam_id: str) -> None:
     try:
         bot.send_message(message.chat.id, 'Подождите немного, загружаем вашу библиотеку...')
         info_url = steam_info_url(steam_id)
-        print("!", info_url)
         response = requests.get(info_url)
-        print(response)
         data = response.json()
-        print(data)
 
         if response.status_code == 200:
             games = data['response']['games']
